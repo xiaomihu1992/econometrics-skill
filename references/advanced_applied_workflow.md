@@ -1,6 +1,6 @@
 # Advanced Applied Econometrics Workflow
 
-Load this reference when the user wants thesis, paper, referee-response, or publication-grade causal analysis. The goal is to move from "run an estimator" to "defend a research design."
+Load this reference when the user wants referee-response, advanced research, or publication-grade causal analysis. The goal is to move from "run an estimator" to "defend a research design."
 
 ## Output contract
 

@@ -6,7 +6,7 @@ metadata: {"short-description": "Causal inference for tabular data", "version": 
 
 # Econometrics Skill
 
-This skill gives Codex a curated library of **17 causal-inference estimators** (in `lib/econometric_algorithm.py`) plus the judgment to pick the right one for the user's identification strategy. For thesis, paper, referee-response, or publication-grade work, it also provides an advanced applied-econometrics workflow.
+This skill gives Codex a curated library of **17 causal-inference estimators** (in `lib/econometric_algorithm.py`) plus the judgment to pick the right one for the user's identification strategy. For advanced research projects, referee-response, or publication-grade work, it also provides a structured applied-econometrics workflow.
 
 ## What this skill is for
 
@@ -21,7 +21,10 @@ Use Python 3.10+ with `numpy`, `pandas`, `matplotlib`, `statsmodels`, `linearmod
 ## Depth modes
 
 - **Quick mode**: Use the core workflow below when the user needs a defensible first-pass estimate, exploratory causal analysis, or method selection.
-- **Advanced applied mode**: Use `references/advanced_applied_workflow.md` when the user asks for a thesis/paper-level analysis, referee-grade robustness, identification critique, heterogeneity, falsification tests, or a research design memo.
+- **Advanced applied mode**: Use `references/advanced_applied_workflow.md` when the user asks for publication-grade analysis, referee-grade robustness, identification critique, heterogeneity, falsification tests, or a research design memo.
+- **Project workflow mode**: Use `references/applied_project_workflow.md` when the user needs an end-to-end empirical project plan from question to final report.
+- **Table mode**: Use `lib/result_tables.py` and `references/result_tables.md` when the user needs compact model comparison tables.
+- **Checklist mode**: Use `references/diagnostic_checklist.md` before presenting estimates as causal.
 
 ## The core workflow
 
@@ -82,6 +85,8 @@ For serious applied work, do more than estimate a coefficient. Produce these art
 5. **Robustness suite**: placebo outcomes, placebo treatment timing/cutoffs, bandwidth or trimming sensitivity, cluster choices, and influential-observation checks.
 6. **Heterogeneity plan**: pre-specified subgroups or interactions, multiple-testing caution, and whether effects should be interpreted as exploratory.
 7. **Research-grade caveats**: which assumption remains untestable, what evidence supports it, and what design would be stronger.
+
+For full project scaffolding, read `references/applied_project_workflow.md`. For method-specific diagnostics, read `references/diagnostic_checklist.md`. For model comparison tables, use `lib/result_tables.py` with `references/result_tables.md`.
 
 ## Data preprocessing (before calling any algorithm)
 
@@ -203,7 +208,10 @@ The 17 functions cover the common cases, but some requests need custom code — 
 ## Reference files
 
 - `references/method_selection.md` — decision guide for picking the right estimator
+- `references/applied_project_workflow.md` — end-to-end empirical project workflow from question to final report
 - `references/advanced_applied_workflow.md` — advanced applied workflow: estimands, identification memos, diagnostics, robustness, heterogeneity
+- `references/diagnostic_checklist.md` — method-specific checks before presenting estimates as causal
+- `references/result_tables.md` — compact model comparison table workflow using `lib/result_tables.py`
 - `references/method_details.md` — exact signatures and minimal code per function
 - `references/interpretation.md` — how to report results for each method family
 - `examples/` — runnable end-to-end examples per method family

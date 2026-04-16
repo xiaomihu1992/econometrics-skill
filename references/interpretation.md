@@ -1,6 +1,6 @@
 # Results Interpretation Guide
 
-A regression table is not an answer. Your job is to turn coefficients into a paragraph the user can put in a slide or a paper. Follow the templates below per method family.
+A regression table is not an answer. Your job is to turn coefficients into a paragraph the user can put in a slide, memo, or final report. Follow the templates below per method family.
 
 ## General reporting structure
 

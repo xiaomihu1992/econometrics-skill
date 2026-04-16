@@ -15,7 +15,7 @@ metadata:
 
 # 计量经济学 Skill
 
-这个 skill 为 Codex 提供一套经过整理的 **17 个因果推断估计器**（位于 `lib/econometric_algorithm.py`），并提供围绕用户识别策略选择合适方法的判断框架。对于论文、学位论文、审稿回复或发表级分析，它还提供更高级的应用计量研究工作流。
+这个 skill 为 Codex 提供一套经过整理的 **17 个因果推断估计器**（位于 `lib/econometric_algorithm.py`），并提供围绕用户识别策略选择合适方法的判断框架。对于进阶研究项目、审稿回复或发表级分析，它还提供更高级的应用计量研究工作流。
 
 ## 这个 skill 适合做什么
 
@@ -30,7 +30,10 @@ metadata:
 ## 深度模式
 
 - **快速模式**：当用户需要可信的一阶估计、探索性因果分析或方法选择时，使用下面的核心工作流。
-- **高级应用模式**：当用户要求学位论文/论文级分析、审稿级稳健性、识别策略批判、异质性分析、证伪检验或研究设计备忘录时，读取 `references/advanced_applied_workflow.md`。
+- **高级应用模式**：当用户要求发表级分析、审稿级稳健性、识别策略批判、异质性分析、证伪检验或研究设计备忘录时，读取 `references/advanced_applied_workflow.md`。
+- **项目工作流模式**：当用户需要从问题到最终报告的完整实证项目计划时，读取 `references/applied_project_workflow.md`。
+- **结果表模式**：当用户需要紧凑的模型对比表时，使用 `lib/result_tables.py` 和 `references/result_tables.md`。
+- **诊断清单模式**：在把估计结果表述为因果证据前，读取 `references/diagnostic_checklist.md`。
 
 ## 核心工作流
 
@@ -93,6 +96,8 @@ metadata:
 5. **稳健性组合**：安慰剂结果、安慰剂处理时点/cutoff、带宽或 trimming 敏感性、聚类选择、影响点检查。
 6. **异质性计划**：预先指定的子组或交互项、多重检验提醒，以及效应是否只能解释为探索性。
 7. **研究级 caveats**：仍不可检验的假设是什么，现有证据如何支持它，以及更强的研究设计会是什么。
+
+如需完整项目脚手架，读取 `references/applied_project_workflow.md`。如需分方法诊断，读取 `references/diagnostic_checklist.md`。如需模型对比结果表，使用 `lib/result_tables.py` 并参考 `references/result_tables.md`。
 
 ## 数据预处理（调用任何算法之前）
 
@@ -215,7 +220,10 @@ print(get_column_info(df))
 ## 参考文件
 
 - `references/method_selection.md`：选择合适估计器的决策指南
+- `references/applied_project_workflow.md`：从研究问题到最终报告的完整实证项目工作流
 - `references/advanced_applied_workflow.md`：高级应用工作流：estimand、识别备忘录、诊断、稳健性、异质性
+- `references/diagnostic_checklist.md`：把估计结果表述为因果证据前的分方法检查清单
+- `references/result_tables.md`：使用 `lib/result_tables.py` 生成紧凑模型对比表
 - `references/method_details.md`：每个函数的精确签名和最小代码示例
 - `references/interpretation.md`：每个方法家族的结果报告方式
 - `examples/`：各方法家族可运行的端到端示例
