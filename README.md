@@ -16,7 +16,7 @@ A skill (structured prompt + bundled library) that gives AI coding agents the ab
 | Difference-in-Differences (static, staggered, event study) | 4 | ATT / dynamic effects |
 | Regression Discontinuity (sharp, fuzzy, global polynomial) | 3 | LATE at cutoff |
 
-The skill includes method selection guidance, data preprocessing checklists, covariance/SE mapping tables, known library caveats, interpretation templates, and an advanced PhD-level applied workflow.
+The skill includes method selection guidance, data preprocessing checklists, covariance/SE mapping tables, known library caveats, interpretation templates, and an advanced applied workflow.
 
 ## Supported agent frameworks
 
@@ -48,7 +48,7 @@ econometrics-skill/
 │   ├── method_selection.md               # Decision tree for picking the right estimator
 │   ├── method_details.md                 # Exact signatures and minimal code per function
 │   ├── interpretation.md                 # Reporting templates per method family
-│   └── advanced_applied_workflow.md      # PhD-level applied workflow
+│   └── advanced_applied_workflow.md      # Advanced applied workflow
 ├── examples/
 │   ├── ols_example.py                    # OLS: schooling → wages
 │   ├── psm_example.py                    # PSM + IPW with bootstrap
@@ -57,7 +57,7 @@ econometrics-skill/
 │   ├── did_event_study_example.py        # Staggered DID + event study
 │   ├── rdd_example.py                    # Sharp RDD: merit scholarship
 │   ├── rdd_fuzzy_example.py              # Fuzzy RDD: housing subsidy
-│   └── skill_usage_example.zh-CN.md      # 中文使用示例：博士级 DID 分析
+│   └── skill_usage_example.zh-CN.md      # 中文使用示例：DID 政策评估
 ├── agents/
 │   └── openai.yaml                       # OpenAI agent interface config
 ├── requirements.txt
@@ -105,6 +105,6 @@ python ols_example.py
 ### 深度模式
 
 - **快速模式**：核心三步工作流（识别策略 → 数据检查 → 结果解释）
-- **高级应用模式**：博士级研究流程（estimand → 识别备忘录 → 诊断 → 稳健性 → 异质性）
+- **高级应用模式**：高级研究流程（estimand → 识别备忘录 → 诊断 → 稳健性 → 异质性）
 
 详细中文说明见 `SKILL.zh-CN.md`，使用示例见 `examples/skill_usage_example.zh-CN.md`。

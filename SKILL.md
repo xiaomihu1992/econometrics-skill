@@ -1,6 +1,6 @@
 ---
 name: econometrics
-description: "Causal inference and applied econometric analysis on tabular data, from quick treatment-effect estimates to PhD-level applied research design. Use for policy impact, ATE/ATT/LATE/ITT, OLS, propensity scores, IV/2SLS, DID/event studies, RDD, robustness checks, falsification tests, identification memos, 因果推断, 政策评估, 稳健性检验, and 异质性分析."
+description: "Causal inference and applied econometric analysis on tabular data, from quick treatment-effect estimates to publication-grade applied research design. Use for policy impact, ATE/ATT/LATE/ITT, OLS, propensity scores, IV/2SLS, DID/event studies, RDD, robustness checks, falsification tests, identification memos, 因果推断, 政策评估, 稳健性检验, and 异质性分析."
 metadata: {"short-description": "Causal inference for tabular data", "version": "1.1.0", "author": "econometrics-agent"}
 ---
 
@@ -21,7 +21,7 @@ Use Python 3.10+ with `numpy`, `pandas`, `matplotlib`, `statsmodels`, `linearmod
 ## Depth modes
 
 - **Quick mode**: Use the core workflow below when the user needs a defensible first-pass estimate, exploratory causal analysis, or method selection.
-- **Advanced applied mode**: Use `references/advanced_applied_workflow.md` when the user asks for a thesis/paper-level analysis, referee-grade robustness, PhD-level econometrics, identification critique, heterogeneity, falsification tests, or a research design memo.
+- **Advanced applied mode**: Use `references/advanced_applied_workflow.md` when the user asks for a thesis/paper-level analysis, referee-grade robustness, identification critique, heterogeneity, falsification tests, or a research design memo.
 
 ## The core workflow
 
@@ -203,7 +203,7 @@ The 17 functions cover the common cases, but some requests need custom code — 
 ## Reference files
 
 - `references/method_selection.md` — decision guide for picking the right estimator
-- `references/advanced_applied_workflow.md` — PhD-level applied workflow: estimands, identification memos, diagnostics, robustness, heterogeneity
+- `references/advanced_applied_workflow.md` — advanced applied workflow: estimands, identification memos, diagnostics, robustness, heterogeneity
 - `references/method_details.md` — exact signatures and minimal code per function
 - `references/interpretation.md` — how to report results for each method family
 - `examples/` — runnable end-to-end examples per method family

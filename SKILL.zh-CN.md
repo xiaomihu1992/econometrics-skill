@@ -1,7 +1,7 @@
 ---
 name: econometrics
 description: >-
-  面向表格数据的因果推断与应用计量分析，从快速处理效应估计到博士级应用研究设计。
+  面向表格数据的因果推断与应用计量分析，从快速处理效应估计到发表级应用研究设计。
   用于估计政策影响、ATE/ATT/LATE/ITT，或用 OLS、倾向得分、IV/2SLS、
   DID/事件研究、RDD、稳健性检验、证伪检验、识别策略备忘录等方式回答
   “X 对 Y 的影响是什么”。也用于中文请求：因果推断、政策评估、工具变量、
@@ -30,7 +30,7 @@ metadata:
 ## 深度模式
 
 - **快速模式**：当用户需要可信的一阶估计、探索性因果分析或方法选择时，使用下面的核心工作流。
-- **高级应用模式**：当用户要求学位论文/论文级分析、审稿级稳健性、博士级计量、识别策略批判、异质性分析、证伪检验或研究设计备忘录时，读取 `references/advanced_applied_workflow.md`。
+- **高级应用模式**：当用户要求学位论文/论文级分析、审稿级稳健性、识别策略批判、异质性分析、证伪检验或研究设计备忘录时，读取 `references/advanced_applied_workflow.md`。
 
 ## 核心工作流
 
@@ -215,7 +215,7 @@ print(get_column_info(df))
 ## 参考文件
 
 - `references/method_selection.md`：选择合适估计器的决策指南
-- `references/advanced_applied_workflow.md`：博士级应用工作流：estimand、识别备忘录、诊断、稳健性、异质性
+- `references/advanced_applied_workflow.md`：高级应用工作流：estimand、识别备忘录、诊断、稳健性、异质性
 - `references/method_details.md`：每个函数的精确签名和最小代码示例
 - `references/interpretation.md`：每个方法家族的结果报告方式
 - `examples/`：各方法家族可运行的端到端示例

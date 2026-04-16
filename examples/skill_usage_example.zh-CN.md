@@ -1,11 +1,11 @@
-# Skill 使用示例：博士级 DID 政策评估
+# Skill 使用示例：DID 政策评估
 
 这个示例展示如何调用 `$econometrics`，让它不只是跑一个回归，而是按高级应用计量研究流程完成一份可用于论文初稿或研究备忘录的分析。
 
 ## 用户请求示例
 
 ```text
-请使用 $econometrics 帮我做一份博士级应用计量分析。
+请使用 $econometrics 帮我做一份高级应用计量分析。
 
 研究问题：最低工资上调是否影响城市就业率？
 数据文件：/path/to/city_min_wage_panel.xlsx
@@ -31,7 +31,7 @@
 
 ### 1. 进入高级应用模式
 
-因为用户明确要求“博士级应用计量分析”，应读取 `references/advanced_applied_workflow.md`，按高级应用模式组织输出，而不是只调用一个 DID 函数。
+因为用户明确要求”高级应用计量分析”，应读取 `references/advanced_applied_workflow.md`，按高级应用模式组织输出，而不是只调用一个 DID 函数。
 
 ### 2. 先写 estimand
 

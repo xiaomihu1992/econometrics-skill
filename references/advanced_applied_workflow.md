@@ -1,6 +1,6 @@
 # Advanced Applied Econometrics Workflow
 
-Load this reference when the user wants thesis, paper, referee-response, PhD-level, or publication-grade causal analysis. The goal is to move from "run an estimator" to "defend a research design."
+Load this reference when the user wants thesis, paper, referee-response, or publication-grade causal analysis. The goal is to move from "run an estimator" to "defend a research design."
 
 ## Output contract
 
@@ -147,7 +147,7 @@ Heterogeneity can be substantive or noise. For advanced work:
 
 ## Final writing standard
 
-A PhD-level applied conclusion should not sound like "the coefficient is significant." It should say:
+A publication-grade applied conclusion should not sound like "the coefficient is significant." It should say:
 
 - what the estimand is;
 - why the design identifies it;
