@@ -1,0 +1,7 @@
+interface:
+  display_name: "Econometrics"
+  short_description: "Causal inference for tabular data"
+  default_prompt: "Use $econometrics to estimate a treatment effect from a CSV or Excel dataset."
+
+policy:
+  allow_implicit_invocation: true
