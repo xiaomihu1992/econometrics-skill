@@ -1,15 +1,17 @@
 ---
 name: econometrics
 description: >-
-  面向表格数据的因果推断与应用计量分析，从快速处理效应估计到发表级应用研究设计。
+  面向表格数据的因果推断与应用计量分析，从上传数据诊断、清洗建议、
+  快速处理效应估计到发表级应用研究设计。
   用于估计政策影响、ATE/ATT/LATE/ITT，或用 OLS、倾向得分、IV/2SLS、
   DID/事件研究、RDD、稳健性检验、证伪检验、识别策略备忘录等方式回答
   “X 对 Y 的影响是什么”。也用于中文请求：因果推断、政策评估、工具变量、
-  双重差分、断点回归、平行趋势、内生性、选择偏误、稳健性检验、异质性分析，
+  双重差分、断点回归、平行趋势、内生性、选择偏误、数据清洗建议、
+  稳健性检验、异质性分析，
   或“帮我做计量分析”。
 metadata:
   short-description: "面向表格数据的因果推断"
-  version: "1.1.0"
+  version: "1.2.0"
   author: "econometrics-agent"
 ---
 
@@ -32,6 +34,7 @@ metadata:
 - **快速模式**：当用户需要可信的一阶估计、探索性因果分析或方法选择时，使用下面的核心工作流。
 - **高级应用模式**：当用户要求发表级分析、审稿级稳健性、识别策略批判、异质性分析、证伪检验或研究设计备忘录时，读取 `references/advanced_applied_workflow.md`。
 - **项目工作流模式**：当用户需要从问题到最终报告的完整实证项目计划时，读取 `references/applied_project_workflow.md`。
+- **数据诊断模式**：当用户上传数据或询问如何清洗数据时，使用 `lib/data_preprocess.py` 和 `references/data_preprocessing_advice.md`。
 - **结果表模式**：当用户需要紧凑的模型对比表时，使用 `lib/result_tables.py` 和 `references/result_tables.md`。
 - **诊断清单模式**：在把估计结果表述为因果证据前，读取 `references/diagnostic_checklist.md`。
 
@@ -62,7 +65,9 @@ metadata:
 
 ### 第 2 步：检查数据，再调用算法
 
-用 `lib.data_preprocess` 中的 `load_table()` 加载数据集，再运行 `get_column_info()` 获取变量类型概览，和用户确认列名，然后**直接调用算法函数**。这些都是普通 Python 函数，返回拟合模型或估计结果，不是 agent。
+用 `lib.data_preprocess` 中的 `load_table()` 加载数据集。只要用户上传数据或询问如何清洗数据，就先运行 `analyze_dataset()` 和 `format_dataset_report()`，用诊断报告识别可能的变量角色、缺失、重复、类型转换、极端值和面板结构，再选择估计器。完整流程见 `references/data_preprocessing_advice.md`。
+
+完成数据诊断后，和用户确认列名，然后**直接调用算法函数**。这些都是普通 Python 函数，返回拟合模型或估计结果，不是 agent。
 
 数据以 `pd.Series` / `pd.DataFrame` 传入：
 
@@ -101,7 +106,16 @@ metadata:
 
 ## 数据预处理（调用任何算法之前）
 
-所有库函数都要求干净的数值型数据。加载数据后、调用估计器前必须做下面检查；跳过这些步骤是 cryptic error 的最常见来源：
+所有库函数都要求干净的数值型数据。对上传数据，先运行：
+
+```python
+from data_preprocess import analyze_dataset, format_dataset_report
+
+analysis = analyze_dataset("data.xlsx", sheet_name=0)
+print(format_dataset_report(analysis))
+```
+
+然后在加载数据后、调用估计器前做下面检查；跳过这些步骤是 cryptic error 的最常见来源：
 
 1. **缺失值**：传入前先删除或填补 NaN。库函数会调用 `.astype(float)`，对象列中含 NaN 时可能报错。用 `df.isnull().sum()` 检查并显式处理。
 
@@ -133,10 +147,12 @@ from econometric_algorithm import (
     Static_Diff_in_Diff_regression,
     Sharp_Regression_Discontinuity_Design_regression,
 )
-from data_preprocess import get_column_info, load_table
+from data_preprocess import analyze_dataset, format_dataset_report, get_column_info, load_table
 
 df = load_table("data.xlsx", sheet_name=0)  # 也支持 .csv、.tsv、.xls、.xlsm
 print(get_column_info(df))
+analysis = analyze_dataset(df)
+print(format_dataset_report(analysis))
 ```
 
 运行代码时：
@@ -222,6 +238,7 @@ print(get_column_info(df))
 - `references/method_selection.md`：选择合适估计器的决策指南
 - `references/applied_project_workflow.md`：从研究问题到最终报告的完整实证项目工作流
 - `references/advanced_applied_workflow.md`：高级应用工作流：estimand、识别备忘录、诊断、稳健性、异质性
+- `references/data_preprocessing_advice.md`：上传数据的自动诊断和清洗建议工作流
 - `references/diagnostic_checklist.md`：把估计结果表述为因果证据前的分方法检查清单
 - `references/result_tables.md`：使用 `lib/result_tables.py` 生成紧凑模型对比表
 - `references/method_details.md`：每个函数的精确签名和最小代码示例

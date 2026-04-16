@@ -1,7 +1,7 @@
 ---
 name: econometrics
-description: "Causal inference and applied econometric analysis on tabular data, from quick treatment-effect estimates to publication-grade applied research design. Use for policy impact, ATE/ATT/LATE/ITT, OLS, propensity scores, IV/2SLS, DID/event studies, RDD, robustness checks, falsification tests, identification memos, 因果推断, 政策评估, 稳健性检验, and 异质性分析."
-metadata: {"short-description": "Causal inference for tabular data", "version": "1.1.0", "author": "econometrics-agent"}
+description: "Causal inference and applied econometric analysis on tabular data, from uploaded-data diagnostics and cleaning advice to treatment-effect estimation and publication-grade applied research design. Use for policy impact, ATE/ATT/LATE/ITT, OLS, propensity scores, IV/2SLS, DID/event studies, RDD, robustness checks, falsification tests, identification memos, 因果推断, 政策评估, 数据清洗建议, 稳健性检验, and 异质性分析."
+metadata: {"short-description": "Causal inference for tabular data", "version": "1.2.0", "author": "econometrics-agent"}
 ---
 
 # Econometrics Skill
@@ -23,6 +23,7 @@ Use Python 3.10+ with `numpy`, `pandas`, `matplotlib`, `statsmodels`, `linearmod
 - **Quick mode**: Use the core workflow below when the user needs a defensible first-pass estimate, exploratory causal analysis, or method selection.
 - **Advanced applied mode**: Use `references/advanced_applied_workflow.md` when the user asks for publication-grade analysis, referee-grade robustness, identification critique, heterogeneity, falsification tests, or a research design memo.
 - **Project workflow mode**: Use `references/applied_project_workflow.md` when the user needs an end-to-end empirical project plan from question to final report.
+- **Data diagnostic mode**: Use `lib/data_preprocess.py` and `references/data_preprocessing_advice.md` when the user uploads data or asks what cleaning is needed.
 - **Table mode**: Use `lib/result_tables.py` and `references/result_tables.md` when the user needs compact model comparison tables.
 - **Checklist mode**: Use `references/diagnostic_checklist.md` before presenting estimates as causal.
 
@@ -53,7 +54,9 @@ The answer to #4 picks the method family. See `references/method_selection.md` f
 
 ### Step 2: Inspect the data, then call the algorithm
 
-Load the dataset with `load_table()` from `lib.data_preprocess`, run `get_column_info()` to get a types overview, confirm column names with the user, and **call the algorithm directly** — these are plain Python functions returning fitted models, not agents.
+Load the dataset with `load_table()` from `lib.data_preprocess`, then run `analyze_dataset()` and `format_dataset_report()` when the user uploads data or asks for cleaning guidance. Use the diagnostic report to identify likely roles, missingness, duplicates, type conversion needs, outliers, and panel structure before choosing an estimator. See `references/data_preprocessing_advice.md` for the full workflow.
+
+After the data diagnostic pass, confirm column names with the user, then **call the algorithm directly** — these are plain Python functions returning fitted models, not agents.
 
 Data is passed as `pd.Series` / `pd.DataFrame`:
 - `dependent_variable` = `df["Y"]`
@@ -90,7 +93,16 @@ For full project scaffolding, read `references/applied_project_workflow.md`. For
 
 ## Data preprocessing (before calling any algorithm)
 
-All library functions expect clean numeric data. Do these checks after loading and before calling any estimator — skipping them is the #1 source of cryptic errors:
+All library functions expect clean numeric data. For uploaded datasets, first run:
+
+```python
+from data_preprocess import analyze_dataset, format_dataset_report
+
+analysis = analyze_dataset("data.xlsx", sheet_name=0)
+print(format_dataset_report(analysis))
+```
+
+Then do these checks after loading and before calling any estimator — skipping them is the #1 source of cryptic errors:
 
 1. **Missing values**: Drop or impute NaNs before passing data. The library functions call `.astype(float)` which turns NaN-containing object columns into errors. Check with `df.isnull().sum()` and handle explicitly.
 
@@ -122,10 +134,12 @@ from econometric_algorithm import (
     Static_Diff_in_Diff_regression,
     Sharp_Regression_Discontinuity_Design_regression,
 )
-from data_preprocess import get_column_info, load_table
+from data_preprocess import analyze_dataset, format_dataset_report, get_column_info, load_table
 
 df = load_table("data.xlsx", sheet_name=0)  # also supports .csv, .tsv, .xls, .xlsm
 print(get_column_info(df))
+analysis = analyze_dataset(df)
+print(format_dataset_report(analysis))
 ```
 
 When running the code:
@@ -210,6 +224,7 @@ The 17 functions cover the common cases, but some requests need custom code — 
 - `references/method_selection.md` — decision guide for picking the right estimator
 - `references/applied_project_workflow.md` — end-to-end empirical project workflow from question to final report
 - `references/advanced_applied_workflow.md` — advanced applied workflow: estimands, identification memos, diagnostics, robustness, heterogeneity
+- `references/data_preprocessing_advice.md` — automatic dataset diagnostics and cleaning advice workflow
 - `references/diagnostic_checklist.md` — method-specific checks before presenting estimates as causal
 - `references/result_tables.md` — compact model comparison table workflow using `lib/result_tables.py`
 - `references/method_details.md` — exact signatures and minimal code per function

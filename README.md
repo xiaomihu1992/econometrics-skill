@@ -16,7 +16,7 @@ A skill (structured prompt + bundled library) that gives AI coding agents the ab
 | Difference-in-Differences (static, staggered, event study) | 4 | ATT / dynamic effects |
 | Regression Discontinuity (sharp, fuzzy, global polynomial) | 3 | LATE at cutoff |
 
-The skill includes method selection guidance, data preprocessing checklists, covariance/SE mapping tables, known library caveats, interpretation templates, an end-to-end project workflow, diagnostic checklists, result-table helpers, and an advanced applied workflow.
+The skill includes method selection guidance, automatic uploaded-data diagnostics, data preprocessing checklists, covariance/SE mapping tables, known library caveats, interpretation templates, an end-to-end project workflow, diagnostic checklists, result-table helpers, and an advanced applied workflow.
 
 ## Supported agent frameworks
 
@@ -43,13 +43,14 @@ econometrics-skill/
 ├── SKILL.zh-CN.md                        # 中文版 skill 定义
 ├── lib/
 │   ├── econometric_algorithm.py          # 17 causal-inference functions
-│   ├── data_preprocess.py                # load_table + get_column_info
+│   ├── data_preprocess.py                # load_table + uploaded-data diagnostics
 │   └── result_tables.py                  # compact model comparison tables
 ├── references/
 │   ├── method_selection.md               # Decision tree for picking the right estimator
 │   ├── method_details.md                 # Exact signatures and minimal code per function
 │   ├── interpretation.md                 # Reporting templates per method family
 │   ├── applied_project_workflow.md       # End-to-end empirical project workflow
+│   ├── data_preprocessing_advice.md      # Automatic dataset diagnostics and cleaning advice
 │   ├── diagnostic_checklist.md           # Method-specific diagnostic checklist
 │   ├── result_tables.md                  # Result table helper guide
 │   └── advanced_applied_workflow.md      # Advanced applied workflow
@@ -61,6 +62,7 @@ econometrics-skill/
 │   ├── did_event_study_example.py        # Staggered DID + event study
 │   ├── rdd_example.py                    # Sharp RDD: merit scholarship
 │   ├── rdd_fuzzy_example.py              # Fuzzy RDD: housing subsidy
+│   ├── data_diagnostic_example.py        # Uploaded-data diagnostics and cleaning advice
 │   └── skill_usage_example.zh-CN.md      # 中文使用示例：DID 政策评估
 ├── agents/
 │   └── openai.yaml                       # OpenAI agent interface config
@@ -77,6 +79,8 @@ econometrics-skill/
 ## Practical helpers
 
 - `references/applied_project_workflow.md` guides users from question to final report.
+- `lib/data_preprocess.py` can inspect uploaded CSV/Excel data and produce cleaning advice.
+- `references/data_preprocessing_advice.md` explains how agents should use the diagnostic output.
 - `references/diagnostic_checklist.md` gives method-specific checks before causal interpretation.
 - `lib/result_tables.py` builds compact model comparison tables for statsmodels and linearmodels results.
 
@@ -116,6 +120,7 @@ python ols_example.py
 
 - **快速模式**：核心三步工作流（识别策略 → 数据检查 → 结果解释）
 - **项目工作流模式**：研究问题 → 变量表 → 识别策略 → 诊断 → 稳健性 → 最终报告
+- **数据诊断模式**：自动分析上传数据并给出清洗、变量角色和建模准备建议
 - **结果表模式**：整理多个模型的系数、标准误、显著性标记和拟合统计量
 - **诊断清单模式**：在因果解释前检查各方法的关键风险
 - **高级应用模式**：高级研究流程（estimand → 识别备忘录 → 诊断 → 稳健性 → 异质性）
