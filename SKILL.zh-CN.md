@@ -17,7 +17,7 @@ metadata:
 
 # 计量经济学 Skill
 
-这个 skill 为 Codex 提供一套经过整理的 **17 个因果推断估计器**（位于 `lib/econometric_algorithm.py`），并提供围绕用户识别策略选择合适方法的判断框架。对于进阶研究项目、审稿回复或发表级分析，它还提供更高级的应用计量研究工作流。
+这个 skill 为 Codex、Claude Code、OpenClaw 等 AI 编程助手提供一套经过整理的 **17 个因果推断估计器**（位于 `lib/econometric_algorithm.py`），并提供围绕用户识别策略选择合适方法的判断框架。对于进阶研究项目、审稿回复或发表级分析，它还提供更高级的应用计量研究工作流。
 
 ## 这个 skill 适合做什么
 

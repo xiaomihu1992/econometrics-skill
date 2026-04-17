@@ -6,7 +6,7 @@ metadata: {"short-description": "Causal inference for tabular data", "version": 
 
 # Econometrics Skill
 
-This skill gives Codex a curated library of **17 causal-inference estimators** (in `lib/econometric_algorithm.py`) plus the judgment to pick the right one for the user's identification strategy. For advanced research projects, referee-response, or publication-grade work, it also provides a structured applied-econometrics workflow.
+This skill gives AI coding agents such as Codex, Claude Code, and OpenClaw a curated library of **17 causal-inference estimators** (in `lib/econometric_algorithm.py`) plus the judgment to pick the right one for the user's identification strategy. For advanced research projects, referee-response, or publication-grade work, it also provides a structured applied-econometrics workflow.
 
 ## What this skill is for
 
