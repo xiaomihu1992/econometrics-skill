@@ -19,6 +19,24 @@ from linearmodels import PanelOLS
 import scipy.stats
 
 
+def _as_dataframe(value, default_name: str) -> pd.DataFrame:
+    if isinstance(value, pd.Series):
+        name = value.name or default_name
+        return value.rename(name).to_frame()
+    return value.copy()
+
+
+def _f_test_scalar(test_result):
+    value = np.asarray(test_result).squeeze()
+    return float(value)
+
+
+def _validate_target_type(target_type: str, allowed: tuple[str, ...], function_name: str) -> None:
+    if target_type not in allowed:
+        allowed_text = ", ".join(repr(item) for item in allowed)
+        raise ValueError(f"{function_name}: target_type must be one of {allowed_text}; got {target_type!r}.")
+
+
 def ordinary_least_square_regression(dependent_variable, treatment_variable, covariate_variables, weights=None, cov_info="nonrobust", target_type="final_model", output_tables=False):
     """
     Use Ordinary Least Square Regression method to estimate Average Treatment Effect (ATE) of
@@ -30,13 +48,14 @@ def ordinary_least_square_regression(dependent_variable, treatment_variable, cov
         covariate_variables (pd.DataFrame or None): Proposed covariate variables.
         weights (pd.Series or None): Weights for WLS. None for standard OLS.
         cov_info (str or dict): Covariance estimator. Supports "nonrobust", "HC0"-"HC3", {"HAC": maxlags}, {"cluster": groups}.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if isinstance(cov_info, str) and cov_info not in ["nonrobust", "HC0", "HC1", "HC2", "HC3"]:
         raise RuntimeError("Covariance type input unsupported!")
     elif isinstance(cov_info, dict) and list(cov_info.keys())[0] not in ["HAC", "cluster"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "ordinary_least_square_regression")
 
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
@@ -88,7 +107,7 @@ def propensity_score_construction(treatment_variable, covariate_variables):
     treatment_variable = treatment_variable.astype(float)
     covariate_variables = covariate_variables.astype(float)
 
-    clf = sm.Logit(treatment_variable, sm.add_constant(covariate_variables).astype(float)).fit()
+    clf = sm.Logit(treatment_variable, sm.add_constant(covariate_variables).astype(float)).fit(disp=0)
     result_series = pd.Series(clf.predict(sm.add_constant(covariate_variables).astype(float)), index=covariate_variables.index)
     result_series.name = "propensity_score"
     return result_series
@@ -129,8 +148,7 @@ def propensity_score_matching(dependent_variable, treatment_variable, propensity
         matched_num (int): Number of nearest neighbors for matching.
         target_type (str): "ATE" or "ATT".
     """
-    if target_type not in ["ATE", "ATT"]:
-        raise RuntimeError("Target Type Input Not Supported! Only ATE or ATT could be supported!")
+    _validate_target_type(target_type, ("ATE", "ATT"), "propensity_score_matching")
 
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
@@ -184,8 +202,7 @@ def propensity_score_inverse_probability_weighting(dependent_variable, treatment
         propensity_score (pd.Series): Propensity scores.
         target_type (str): "ATE" or "ATT".
     """
-    if target_type not in ["ATE", "ATT"]:
-        raise RuntimeError("Target Type Input Not Supported! Only ATE or ATT could be supported!")
+    _validate_target_type(target_type, ("ATE", "ATT"), "propensity_score_inverse_probability_weighting")
 
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
@@ -210,9 +227,11 @@ def propensity_score_regression(dependent_variable, treatment_variable, propensi
         treatment_variable (pd.Series): Binary treatment variable.
         propensity_score (pd.Series): Propensity scores.
         cov_type (str or None): Covariance estimator. Use "HC1" for robust.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "propensity_score_regression")
+
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
 
@@ -280,9 +299,11 @@ def propensity_score_double_robust_estimator_IPW_regression_adjustment(dependent
         covariate_variables (pd.DataFrame): Covariate variables.
         propensity_score (pd.Series): Propensity scores.
         cov_type (str or None): Covariance estimator. Use "HC1" for robust.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "propensity_score_double_robust_estimator_IPW_regression_adjustment")
+
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
     if covariate_variables is not None:
@@ -321,13 +342,14 @@ def IV_2SLS_regression(dependent_variable, treatment_variable, IV_variable, cova
         IV_variable (pd.Series or pd.DataFrame): Instrument variable(s).
         covariate_variables (pd.DataFrame or None): Covariate variables.
         cov_info (str or dict): Covariance estimator.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if isinstance(cov_info, str) and cov_info not in ["nonrobust", "HC0", "HC1", "HC2", "HC3"]:
         raise RuntimeError("Covariance type input unsupported!")
     elif isinstance(cov_info, dict) and list(cov_info.keys())[0] not in ["HAC", "cluster"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "IV_2SLS_regression")
 
     dependent_variable = dependent_variable.astype(float)
     treatment_variable = treatment_variable.astype(float)
@@ -374,22 +396,47 @@ def IV_2SLS_regression(dependent_variable, treatment_variable, IV_variable, cova
 
 def IV_2SLS_IV_setting_test(dependent_variable, treatment_variable, IV_variable, covariate_variables, cov_type=None):
     """
-    Test IV assumptions: Relevant Condition and Exclusion Restriction.
+    Run IV diagnostics for relevance and falsification checks.
+
+    Exclusion restriction is not directly testable in a just-identified IV
+    design. The returned residual_falsification_check is only a heuristic:
+    it regresses residuals from Y on T and X against Z conditional on X.
 
     Args:
         dependent_variable (pd.Series): Target dependent variable.
         treatment_variable (pd.Series): Target treatment variable.
-        IV_variable (pd.Series): Single instrument variable.
+        IV_variable (pd.Series or pd.DataFrame): Instrument variable(s).
         covariate_variables (pd.DataFrame or None): Covariate variables.
         cov_type (str or None): Covariance estimator.
 
     Returns:
-        dict: Test results with relevant_condition and exclusion_restriction summaries.
+        dict: Diagnostic results with first_stage, reduced_form, and residual_falsification_check.
     """
-    if cov_type is None:
-        relevant_test_OLS = sm.OLS(treatment_variable, sm.add_constant(IV_variable)).fit()
+    IV_variable = _as_dataframe(IV_variable, "instrument").astype(float)
+    if covariate_variables is not None:
+        covariate_variables = covariate_variables.astype(float)
+
+    if covariate_variables is None:
+        first_stage_X = IV_variable
     else:
-        relevant_test_OLS = sm.OLS(treatment_variable, sm.add_constant(IV_variable)).fit(cov_type=cov_type)
+        first_stage_X = pd.concat([IV_variable, covariate_variables], axis=1).astype(float)
+
+    if cov_type is None:
+        first_stage_OLS = sm.OLS(treatment_variable, sm.add_constant(first_stage_X)).fit()
+    else:
+        first_stage_OLS = sm.OLS(treatment_variable, sm.add_constant(first_stage_X)).fit(cov_type=cov_type)
+
+    instrument_names = list(IV_variable.columns)
+    param_names = list(first_stage_OLS.params.index)
+    restriction_matrix = np.zeros((len(instrument_names), len(param_names)))
+    for row_index, instrument_name in enumerate(instrument_names):
+        restriction_matrix[row_index, param_names.index(instrument_name)] = 1
+    first_stage_ftest = first_stage_OLS.f_test(restriction_matrix)
+
+    if cov_type is None:
+        reduced_form_OLS = sm.OLS(dependent_variable, sm.add_constant(first_stage_X)).fit()
+    else:
+        reduced_form_OLS = sm.OLS(dependent_variable, sm.add_constant(first_stage_X)).fit(cov_type=cov_type)
 
     if covariate_variables is None:
         restriction_test_X = treatment_variable
@@ -401,13 +448,18 @@ def IV_2SLS_IV_setting_test(dependent_variable, treatment_variable, IV_variable,
         restriction_test_OLS = sm.OLS(dependent_variable, sm.add_constant(restriction_test_X)).fit(cov_type=cov_type)
     residual_series = pd.Series(restriction_test_OLS.resid, index=restriction_test_X.index)
     if cov_type is None:
-        restriction_test_final_OLS = sm.OLS(residual_series, sm.add_constant(IV_variable)).fit()
+        residual_falsification_OLS = sm.OLS(residual_series, sm.add_constant(first_stage_X)).fit()
     else:
-        restriction_test_final_OLS = sm.OLS(residual_series, sm.add_constant(IV_variable)).fit(cov_type=cov_type)
+        residual_falsification_OLS = sm.OLS(residual_series, sm.add_constant(first_stage_X)).fit(cov_type=cov_type)
 
     return {
-        "relevant_condition": relevant_test_OLS,
-        "exclusion_restriction": restriction_test_final_OLS,
+        "first_stage": first_stage_OLS,
+        "reduced_form": reduced_form_OLS,
+        "first_stage_partial_f": _f_test_scalar(first_stage_ftest.fvalue),
+        "first_stage_partial_f_pvalue": _f_test_scalar(first_stage_ftest.pvalue),
+        "residual_falsification_check": residual_falsification_OLS,
+        # Backward-compatible alias. Prefer "first_stage" in new code.
+        "relevant_condition": first_stage_OLS,
     }
 
 
@@ -424,11 +476,12 @@ def Static_Diff_in_Diff_regression(dependent_variable, treatment_entity_dummy, t
         time_effect (bool): Include time fixed effects.
         other_effect (pd.DataFrame or None): Other fixed effects.
         cov_type (str): "unadjusted", "robust", "cluster_entity", "cluster_time", or "cluster_both".
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if cov_type not in ["unadjusted", "robust", "cluster_entity", "cluster_time", "cluster_both"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "Static_Diff_in_Diff_regression")
     count_effects = 0
     if entity_effect:
         count_effects += 1
@@ -493,11 +546,12 @@ def Staggered_Diff_in_Diff_regression(dependent_variable, entity_treatment_dummy
         time_effect (bool): Include time fixed effects.
         other_effect (pd.DataFrame or None): Other fixed effects.
         cov_type (str): "unadjusted", "robust", "cluster_entity", "cluster_time", or "cluster_both".
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if cov_type not in ["unadjusted", "robust", "cluster_entity", "cluster_time", "cluster_both"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "Staggered_Diff_in_Diff_regression")
     count_effects = 0
     if entity_effect:
         count_effects += 1
@@ -558,11 +612,12 @@ def Staggered_Diff_in_Diff_Event_Study_regression(dependent_variable, entity_tre
         time_effect (bool): Include time fixed effects.
         other_effect (pd.DataFrame or None): Other fixed effects.
         cov_type (str): "unadjusted", "robust", "cluster_entity", "cluster_time", or "cluster_both".
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if cov_type not in ["unadjusted", "robust", "cluster_entity", "cluster_time", "cluster_both"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "Staggered_Diff_in_Diff_Event_Study_regression")
     count_effects = 0
     if entity_effect:
         count_effects += 1
@@ -682,19 +737,25 @@ def Staggered_Diff_in_Diff_Event_Study_visualization(regression_model, see_back_
     Lag_column_name_list.append("Lag_D" + str(see_forward_length) + "+")
     Lead_and_Lag_column_name_list = Lead_column_name_list + ["D0"] + Lag_column_name_list
 
+    available_terms = [name for name in Lead_and_Lag_column_name_list if name in regression_model.params.index]
+    x_positions = np.arange(len(available_terms))
+    estimates = regression_model.params.loc[available_terms].astype(float)
+    intervals = regression_model.conf_int().loc[available_terms]
+
     fig, ax = plt.subplots()
-    ax.plot(regression_model.params[Lead_and_Lag_column_name_list])
-    ax.set_xticks(list(range(len(Lead_and_Lag_column_name_list))))
-    ax.set_xticklabels(Lead_and_Lag_column_name_list, rotation=45)
+    ax.plot(x_positions, estimates, marker="o")
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(available_terms, rotation=45)
     ax.set_ylabel("Estimated Coefficients")
     ax.set_title("Event Study")
     ax.axhline(y=0, color="g", linestyle="--")
-    ax.axvline(x=2.5, color="g", linestyle="--")
-    for each_x_count in range(len(Lead_and_Lag_column_name_list)):
-        each_x = regression_model.conf_int().index[each_x_count]
-        ax.plot([each_x_count - 1 - 0.1, each_x_count - 1 + 0.1], [regression_model.conf_int().loc[each_x, "lower"], regression_model.conf_int().loc[each_x, "lower"]], color="#f44336")
-        ax.plot([each_x_count - 1 - 0.1, each_x_count - 1 + 0.1], [regression_model.conf_int().loc[each_x, "upper"], regression_model.conf_int().loc[each_x, "upper"]], color="#f44336")
-        ax.plot([each_x, each_x], [regression_model.conf_int().loc[each_x, "lower"], regression_model.conf_int().loc[each_x, "upper"]], color="#f44336")
+    if "D0" in available_terms:
+        ax.axvline(x=available_terms.index("D0"), color="g", linestyle="--")
+    lower = intervals.iloc[:, 0].astype(float)
+    upper = intervals.iloc[:, 1].astype(float)
+    ax.vlines(x_positions, lower, upper, color="#f44336")
+    ax.plot(x_positions, lower, "_", color="#f44336")
+    ax.plot(x_positions, upper, "_", color="#f44336")
     fig.tight_layout()
     return fig
 
@@ -712,7 +773,7 @@ def Sharp_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         running_variable_bandwidth (float or None): Bandwidth. None for full sample.
         kernel_choice (str): "uniform", "triangle", or "Epanechnikov".
         cov_info (str or dict): Covariance estimator.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if kernel_choice not in ["uniform", "triangle", "Epanechnikov"]:
@@ -721,6 +782,7 @@ def Sharp_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         raise RuntimeError("Covariance type input unsupported!")
     elif isinstance(cov_info, dict) and list(cov_info.keys())[0] not in ["HAC", "cluster"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "Sharp_Regression_Discontinuity_Design_regression")
     if running_variable_bandwidth is not None and running_variable_bandwidth <= 0:
         raise RuntimeError("Bandwidth must be larger than 0!")
     if running_variable[running_variable > running_variable_cutoff].shape[0] == 0 or running_variable[running_variable < running_variable_cutoff].shape[0] == 0:
@@ -778,7 +840,7 @@ def Sharp_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         return model
 
 
-def Fuzzy_Regression_Discontinuity_Design_regression(dependent_variable, entity_treatment_dummy, running_variable, covariate_variables, running_variable_cutoff, running_variable_bandwidth, kernel_choice="uniform", cov_info="nonrobust", target_type="estimator", output_tables=False):
+def Fuzzy_Regression_Discontinuity_Design_regression(dependent_variable, entity_treatment_dummy, running_variable, covariate_variables, running_variable_cutoff, running_variable_bandwidth, kernel_choice="uniform", cov_info="nonrobust", target_type="summary", output_tables=False):
     """
     Two-step Fuzzy RDD Local Linear Regression.
 
@@ -791,7 +853,7 @@ def Fuzzy_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         running_variable_bandwidth (float or None): Bandwidth. None for full sample.
         kernel_choice (str): "uniform", "triangle", or "Epanechnikov".
         cov_info (str or dict): Covariance estimator.
-        target_type (str or None): "estimator" or "final_models".
+        target_type (str): "summary", "estimator", or "final_models".
         output_tables (bool): Whether to print regression tables.
     """
     if kernel_choice not in ["uniform", "triangle", "Epanechnikov"]:
@@ -800,6 +862,7 @@ def Fuzzy_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         raise RuntimeError("Covariance type input unsupported!")
     elif isinstance(cov_info, dict) and list(cov_info.keys())[0] not in ["HAC", "cluster"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("summary", "estimator", "final_models"), "Fuzzy_Regression_Discontinuity_Design_regression")
     if running_variable_bandwidth is not None and running_variable_bandwidth <= 0:
         raise RuntimeError("Bandwidth must be larger than 0!")
     if running_variable[running_variable > running_variable_cutoff].shape[0] == 0 or running_variable[running_variable < running_variable_cutoff].shape[0] == 0:
@@ -857,8 +920,46 @@ def Fuzzy_Regression_Discontinuity_Design_regression(dependent_variable, entity_
         print(model_1.summary())
         print(model_2.summary())
 
-    if target_type == "estimator":
-        return model_1.params[should_be_treated_dummy.name] / model_2.params[should_be_treated_dummy.name]
+    reduced_form_jump = float(model_1.params[should_be_treated_dummy.name])
+    first_stage_jump = float(model_2.params[should_be_treated_dummy.name])
+    wald_late = reduced_form_jump / first_stage_jump if first_stage_jump != 0 else np.nan
+
+    reduced_form_se = float(model_1.bse[should_be_treated_dummy.name])
+    first_stage_se = float(model_2.bse[should_be_treated_dummy.name])
+    if first_stage_jump == 0:
+        approx_delta_se = np.inf
+    else:
+        # Approximate delta method that ignores covariance between stages.
+        approx_delta_se = float(np.sqrt((reduced_form_se / first_stage_jump) ** 2 + ((reduced_form_jump * first_stage_se) / (first_stage_jump ** 2)) ** 2))
+
+    if np.isfinite(approx_delta_se):
+        ci_low = float(wald_late - 1.96 * approx_delta_se)
+        ci_high = float(wald_late + 1.96 * approx_delta_se)
+    else:
+        ci_low = np.nan
+        ci_high = np.nan
+
+    summary = {
+        "wald_late": float(wald_late),
+        "reduced_form_jump": reduced_form_jump,
+        "first_stage_jump": first_stage_jump,
+        "reduced_form_se": reduced_form_se,
+        "first_stage_se": first_stage_se,
+        "first_stage_pvalue": float(model_2.pvalues[should_be_treated_dummy.name]),
+        "approx_delta_se": approx_delta_se,
+        "ci_low": ci_low,
+        "ci_high": ci_high,
+        "within_bandwidth_n": int(selected_running_variable.shape[0]),
+        "bandwidth": float(running_variable_bandwidth),
+        "weak_first_stage": bool(abs(first_stage_jump) < 0.05 or model_2.pvalues[should_be_treated_dummy.name] > 0.05),
+        "models": [model_1, model_2],
+        "se_note": "Approximate delta-method SE ignores covariance between reduced-form and first-stage estimates; bootstrap or dedicated IV/RDD software is preferred for serious inference.",
+    }
+
+    if target_type == "summary":
+        return summary
+    elif target_type == "estimator":
+        return wald_late
     elif target_type == "final_models":
         return [model_1, model_2]
 
@@ -876,7 +977,7 @@ def Fuzzy_RDD_Global_Polynomial_Estimator_regression(dependent_variable, entity_
         max_order (int): Highest polynomial order (>= 1).
         kernel_choice (str): "uniform", "triangle", or "Epanechnikov".
         cov_info (str or dict): Covariance estimator.
-        target_type (str or None): "neg_pvalue", "rsquared", or "final_model".
+        target_type (str): "neg_pvalue", "rsquared", or "final_model".
         output_tables (bool): Whether to print regression tables.
     """
     if kernel_choice not in ["uniform", "triangle", "Epanechnikov"]:
@@ -885,6 +986,7 @@ def Fuzzy_RDD_Global_Polynomial_Estimator_regression(dependent_variable, entity_
         raise RuntimeError("Covariance type input unsupported!")
     elif isinstance(cov_info, dict) and list(cov_info.keys())[0] not in ["HAC", "cluster"]:
         raise RuntimeError("Covariance type input unsupported!")
+    _validate_target_type(target_type, ("neg_pvalue", "rsquared", "final_model"), "Fuzzy_RDD_Global_Polynomial_Estimator_regression")
     if running_variable[running_variable > running_variable_cutoff].shape[0] == 0 or running_variable[running_variable < running_variable_cutoff].shape[0] == 0:
         raise RuntimeError("Running variable cutoff is out of range!")
     if max_order < 1:

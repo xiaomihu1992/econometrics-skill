@@ -96,6 +96,18 @@ def _dedupe(values: list[str]) -> list[str]:
     return result
 
 
+def _role_hint_values(role_hints: Mapping[str, str | list[str]], role_name: str) -> list[str]:
+    values: list[str] = []
+    for key, value in role_hints.items():
+        if role_name not in str(key).lower():
+            continue
+        if isinstance(value, str):
+            values.append(value)
+        else:
+            values.extend(str(item) for item in value)
+    return values
+
+
 def _numeric_summary(series: pd.Series) -> dict[str, Any]:
     numeric = pd.to_numeric(series, errors="coerce")
     non_missing = numeric.dropna()
@@ -176,9 +188,9 @@ def _is_binary_like(series: pd.Series) -> bool:
     return values in binary_sets or len(values) == 2
 
 
-def _looks_like_treatment(col: str, series: pd.Series) -> bool:
+def _has_treatment_name_hint(col: str) -> bool:
     name = col.lower()
-    name_hint = any(
+    return any(
         token in name
         for token in [
             "treat",
@@ -186,7 +198,6 @@ def _looks_like_treatment(col: str, series: pd.Series) -> bool:
             "reform",
             "program",
             "eligible",
-            "post",
             "did",
             "处理",
             "政策",
@@ -194,15 +205,15 @@ def _looks_like_treatment(col: str, series: pd.Series) -> bool:
             "试点",
         ]
     )
-    if name_hint:
-        return True
-    if not _is_binary_like(series):
-        return False
-    if pd.api.types.is_numeric_dtype(series) or pd.api.types.is_bool_dtype(series):
-        return True
-    values = set(str(value).strip().lower() for value in series.dropna().unique().tolist())
-    known_treatment_values = {"0", "1", "false", "true", "no", "yes", "n", "y", "control", "treated", "对照", "处理", "否", "是"}
-    return values.issubset(known_treatment_values)
+
+
+def _has_post_name_hint(col: str) -> bool:
+    name = col.lower()
+    return any(token in name for token in ["post", "after", "treated_period", "政策后", "处理后", "之后", "以后"])
+
+
+def _looks_like_treatment(col: str, series: pd.Series) -> bool:
+    return _has_treatment_name_hint(col) and (_is_binary_like(series) or pd.api.types.is_numeric_dtype(series))
 
 
 def _column_profile(col: str, series: pd.Series, sample_values: int) -> dict[str, Any]:
@@ -236,6 +247,10 @@ def _column_profile(col: str, series: pd.Series, sample_values: int) -> dict[str
         profile["flags"].append("time_candidate")
     if _is_binary_like(series):
         profile["flags"].append("binary_candidate")
+    if _has_treatment_name_hint(col):
+        profile["flags"].append("treatment_name_hint")
+    if _has_post_name_hint(col) and _is_binary_like(series):
+        profile["flags"].append("post_indicator_candidate")
     if _looks_like_treatment(col, series):
         profile["flags"].append("treatment_candidate")
 
@@ -303,11 +318,17 @@ def analyze_dataset(
     role_candidates = {
         "unit_id": _dedupe([c["name"] for c in columns if "id_candidate" in c["flags"]])[:8],
         "time": _dedupe([c["name"] for c in columns if "time_candidate" in c["flags"]])[:8],
-        "treatment": _dedupe([
+        "treatment": _dedupe(_role_hint_values(role_hints, "treatment") + [
             c["name"]
             for c in columns
             if "treatment_candidate" in c["flags"] and "time_candidate" not in c["flags"] and "id_candidate" not in c["flags"]
         ])[:8],
+        "binary_variable": _dedupe([
+            c["name"]
+            for c in columns
+            if "binary_candidate" in c["flags"] and "time_candidate" not in c["flags"] and "id_candidate" not in c["flags"]
+        ])[:12],
+        "post_indicator": _dedupe([c["name"] for c in columns if "post_indicator_candidate" in c["flags"]])[:8],
         "numeric_outcome_or_control": _dedupe([
             c["name"]
             for c in columns

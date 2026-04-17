@@ -2,7 +2,7 @@
 
 All functions live in `lib/econometric_algorithm.py`. Return values vary — read the "Returns" line carefully before using.
 
-Convention: every function accepts `target_type` to control what's returned. In day-to-day analysis use `target_type="final_model"` (or `"estimator"` for Fuzzy RDD); the other values (`"neg_pvalue"`, `"rsquared"`) exist for automated hyperparameter search and usually aren't what you want.
+Convention: most functions accept `target_type` to control what's returned. In day-to-day analysis use `target_type="final_model"` (or `"summary"` for Fuzzy RDD); the other values (`"neg_pvalue"`, `"rsquared"`, or legacy scalar returns) exist for automated search or backward compatibility and usually aren't what you want.
 
 ## Table of contents
 
@@ -57,7 +57,7 @@ propensity_score_construction(treatment_variable, covariate_variables) -> pd.Ser
 propensity_score_visualize_propensity_score_distribution(treatment_variable, propensity_score) -> matplotlib.figure.Figure
 ```
 
-**Logit output suppression**: `propensity_score_construction` calls `sm.Logit(...).fit()` without `disp=0`, so it prints convergence info to stdout on every call. Inside a bootstrap loop (500+ iterations), this produces massive output. Suppress with `contextlib.redirect_stdout(io.StringIO())` around the call (see `examples/psm_example.py` for the pattern).
+**Logit output**: `propensity_score_construction` calls `sm.Logit(...).fit(disp=0)`, so routine agent output stays clean. If convergence fails or warnings appear, inspect the treatment coding, separation, and overlap before using PS estimates.
 
 Always run both before any PSM / IPW / AIPW analysis:
 ```python
@@ -140,7 +140,7 @@ propensity_score_regression(
 ) -> statsmodels RegressionResults
 ```
 
-Uses the PS as a single control. Quick but less defensible than AIPW.
+Uses the PS as a single control. Treat this as a quick diagnostic, not a primary causal estimator. A proper AIPW estimator would be stronger in principle, but the bundled AIPW-like implementation below is not actually doubly robust and should not be preferred over PSM/IPW.
 
 ---
 
@@ -192,7 +192,7 @@ Compatibility estimator: weight by 1/ê (for treated) or 1/(1-ê) (for controls)
 
 **Watch the argument order**: this is the only PS function where `covariate_variables` comes *before* `propensity_score`. All other PS functions put `propensity_score` first. Getting this wrong will silently produce garbage results.
 
-**Implementation note**: the library applies `sqrt` to the IPW weights before running WLS (line 292: `IPW = IPW ** 0.5`). This is non-standard and not justified in the DR literature. Interpret with caution and cross-check against PSM/IPW.
+**Implementation note**: the library applies `sqrt` to the IPW weights before running WLS (`IPW = IPW ** 0.5`). This is non-standard and not justified in the DR literature. Interpret with caution and cross-check against PSM/IPW.
 
 ---
 
@@ -214,7 +214,7 @@ IV_2SLS_regression(
 m = IV_2SLS_regression(df["Y"], df["T"], df["Z"], df[["X1","X2"]], cov_info="HC1")
 ```
 
-**Always pair with** `IV_2SLS_IV_setting_test` to report the first-stage F.
+**Always pair with** `IV_2SLS_IV_setting_test` to report the covariate-adjusted partial first-stage F.
 
 **CAVEAT**: This is a hand-rolled 2SLS (two sequential OLS calls), NOT `linearmodels.iv.IV2SLS`. The second-stage standard errors are not adjusted for first-stage estimation uncertainty, so **reported SEs and p-values will be too small**. For publication-quality inference, cross-check with `linearmodels.iv.IV2SLS` or R's `ivreg`.
 
@@ -229,25 +229,31 @@ IV_2SLS_IV_setting_test(
     IV_variable,
     covariate_variables,
     cov_type=None,
-) -> dict  # keys: "relevant_condition", "exclusion_restriction"
+) -> dict  # keys: "first_stage", "reduced_form", "residual_falsification_check", plus first-stage partial-F scalars
 ```
 
-Returns a dict containing **two statsmodels RegressionResults objects** (not raw numbers):
-- `"relevant_condition"` — first-stage OLS of T on Z. Extract the F-stat via `.fvalue` and the p-value via `.f_pvalue`.
-- `"exclusion_restriction"` — OLS of the second-stage residuals on Z. A significant coefficient suggests Z violates the exclusion restriction.
+Returns a dict containing **three statsmodels RegressionResults objects** plus first-stage relevance scalars:
+- `"first_stage"` — first-stage OLS of T on Z and X.
+- `"first_stage_partial_f"` / `"first_stage_partial_f_pvalue"` — joint relevance test for excluded instrument(s), conditional on covariates.
+- `"reduced_form"` — reduced-form OLS of Y on Z and X.
+- `"residual_falsification_check"` — heuristic residual-on-Z check conditional on X. This is **not** a valid exclusion-restriction test; exclusion is not directly testable in a just-identified IV design.
+- `"relevant_condition"` — backward-compatible alias for `"first_stage"`.
 
 ```python
 diag = IV_2SLS_IV_setting_test(df["Y"], df["T"], df["Z"], df[["X1","X2"]])
-first_stage = diag["relevant_condition"]
-print(f"First-stage F = {first_stage.fvalue:.2f} (p = {first_stage.f_pvalue:.4f})")
+first_stage = diag["first_stage"]
+print(f"Partial first-stage F = {diag['first_stage_partial_f']:.2f} (p = {diag['first_stage_partial_f_pvalue']:.4f})")
 print(f"First-stage R² = {first_stage.rsquared:.4f}")
 print(first_stage.summary())
 
-excl = diag["exclusion_restriction"]
-print(f"Exclusion test: coeff on Z = {excl.params[df['Z'].name]:.4f}, p = {excl.pvalues[df['Z'].name]:.4f}")
+reduced = diag["reduced_form"]
+print(f"Reduced form coeff on Z = {reduced.params[df['Z'].name]:.4f}, p = {reduced.pvalues[df['Z'].name]:.4f}")
+
+resid_check = diag["residual_falsification_check"]
+print(f"Residual falsification coeff on Z = {resid_check.params[df['Z'].name]:.4f}, p = {resid_check.pvalues[df['Z'].name]:.4f}")
 ```
 
-Rule of thumb: first-stage F > 10 for a strong instrument. Much less and the 2SLS estimate is unreliable (biased toward OLS).
+Rule of thumb: partial first-stage F > 10 for a strong instrument. Much less and the 2SLS estimate is unreliable (biased toward OLS).
 
 ---
 
@@ -414,7 +420,7 @@ Fuzzy_Regression_Discontinuity_Design_regression(
     running_variable_bandwidth,
     kernel_choice="uniform",
     cov_info="nonrobust",
-    target_type="estimator",          # "estimator" (returns float ATE) or "final_models" (returns list)
+    target_type="summary",            # "summary" (dict), "estimator" (float), or "final_models" (list)
     output_tables=False,
 )
 ```
@@ -422,10 +428,13 @@ Fuzzy_Regression_Discontinuity_Design_regression(
 Two-step fuzzy RDD: reduced form / first stage. Assignment indicator is implicit from the running variable and cutoff.
 
 Return types:
+- `target_type="summary"` → `dict` with Wald LATE, reduced-form jump, first-stage jump, approximate delta-method SE/CI, within-bandwidth N, weak-first-stage flag, and both fitted models.
 - `target_type="estimator"` → `float` (the Wald/fuzzy-RDD ATE estimate)
 - `target_type="final_models"` → `list` of two OLS model objects: `[reduced_form_model, first_stage_model]`
 
-Note: unlike Sharp/Global-Polynomial RDD, Fuzzy RDD does not take `running_variable_bandwidth=None` as "use full sample" — bandwidth is always required and must be positive.
+The summary SE is approximate and ignores covariance between stages. For serious inference, use a bootstrap or dedicated IV/RDD software. If `weak_first_stage=True`, do not use strong causal language.
+
+If `running_variable_bandwidth=None`, the function uses the full observed running-variable range around the cutoff. For credible local inference, prefer an explicit bandwidth and show sensitivity.
 
 ---
 

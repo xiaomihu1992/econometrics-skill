@@ -21,19 +21,29 @@ The skill includes method selection guidance, automatic uploaded-data diagnostic
 ## Supported agent frameworks
 
 - **Claude Code** / **OpenClaw** — reads `SKILL.md` directly
-- **OpenAI Agents** — see `agents/openai.yaml`
+- **OpenAI/Codex skill UI metadata** — see `agents/openai.yaml`; this is not a standalone OpenAI Agents SDK config
 - Any framework that can read a Markdown skill definition
 
-## Quick start
+## Repository
+
+- GitHub: [https://github.com/xiaomihu1992/econometrics-skill](https://github.com/xiaomihu1992/econometrics-skill)
+- SSH: `git@github.com:xiaomihu1992/econometrics-skill.git`
+
+## Usage
 
 ```bash
+# Clone the repository
+git clone git@github.com:xiaomihu1992/econometrics-skill.git
+cd econometrics-skill
+
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Run an example
-cd examples
-python ols_example.py
+# Run a smoke example
+python examples/ols_example.py
 ```
+
+For Claude Code or OpenClaw-style skill loading, install or copy the whole `econometrics-skill/` folder into the environment's skill directory, then invoke `$econometrics` in a causal-inference or uploaded-data diagnostic task. The main entrypoint is `SKILL.md`; detailed method signatures live in `references/method_details.md`.
 
 ## Project structure
 
@@ -65,7 +75,7 @@ econometrics-skill/
 │   ├── data_diagnostic_example.py        # Uploaded-data diagnostics and cleaning advice
 │   └── skill_usage_example.zh-CN.md      # 中文使用示例：DID 政策评估
 ├── agents/
-│   └── openai.yaml                       # OpenAI agent interface config
+│   └── openai.yaml                       # OpenAI/Codex skill UI metadata
 ├── requirements.txt
 ├── LICENSE
 └── README.md
@@ -74,7 +84,7 @@ econometrics-skill/
 ## Dependencies
 
 - Python 3.10+
-- numpy, pandas, matplotlib, statsmodels, linearmodels, scipy, openpyxl
+- numpy, pandas, matplotlib, statsmodels, linearmodels, scipy, openpyxl, xlrd
 
 ## Practical helpers
 
@@ -86,7 +96,7 @@ econometrics-skill/
 
 ## Known limitations
 
-The library functions have several documented caveats (IV SE bias, non-standard AIPW, event study viz bugs, etc.). These are fully documented in `SKILL.md` § "Known library limitations" and in `references/method_details.md`. The skill instructs the agent to disclose these to users when relevant.
+The library functions have several documented caveats (IV SE bias, non-standard AIPW, event-study lead/lag assumptions, etc.). These are fully documented in `SKILL.md` § "Known library limitations" and in `references/method_details.md`. The skill instructs the agent to disclose these to users when relevant.
 
 ## License
 
@@ -107,6 +117,20 @@ MIT
 - **工具变量**：IV / 2SLS + 诊断检验
 - **双重差分**：静态 DID、交错 DID、事件研究 + 可视化
 - **断点回归**：Sharp RDD、Fuzzy RDD（两步法 + 全局多项式）
+
+### 仓库地址与使用说明
+
+- GitHub: [https://github.com/xiaomihu1992/econometrics-skill](https://github.com/xiaomihu1992/econometrics-skill)
+- SSH: `git@github.com:xiaomihu1992/econometrics-skill.git`
+
+```bash
+git clone git@github.com:xiaomihu1992/econometrics-skill.git
+cd econometrics-skill
+pip install -r requirements.txt
+python examples/ols_example.py
+```
+
+在 Claude Code 或 OpenClaw 这类支持 skill 的环境中，把整个 `econometrics-skill/` 目录安装或复制到 skill 目录，然后在因果推断、数据诊断或政策评估任务中调用 `$econometrics`。主入口是 `SKILL.md`，具体函数签名见 `references/method_details.md`。
 
 ### 快速开始
 

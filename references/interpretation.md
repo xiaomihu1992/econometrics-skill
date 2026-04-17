@@ -43,10 +43,10 @@ Always report **three things together**:
 
 ## IV / 2SLS
 
-**Never** report a 2SLS estimate without the first-stage F-statistic.
+**Never** report a 2SLS estimate without the covariate-adjusted partial first-stage F-statistic.
 
 **Template**:
-> Instrumenting T with Z, the 2SLS estimate of the local average treatment effect (LATE) is [β] [unit of Y] (SE = [se], 95% CI [low, high], p = [p]). The first-stage F-statistic is [F]; [values above 10 suggest the instrument is not weak / values below 10 suggest weak-instrument bias is a concern]. Identification requires that Z affects Y only through T (exclusion restriction) and is as-good-as-random conditional on covariates — assumptions that cannot be fully tested and should be defended on institutional grounds.
+> Instrumenting T with Z, the 2SLS estimate of the local average treatment effect (LATE) is [β] [unit of Y] (SE = [se], 95% CI [low, high], p = [p]). The partial first-stage F-statistic conditional on covariates is [F]; [values above 10 suggest the instrument is not weak / values below 10 suggest weak-instrument bias is a concern]. Identification requires that Z affects Y only through T (exclusion restriction) and is as-good-as-random conditional on covariates — assumptions that cannot be fully tested and should be defended on institutional grounds.
 
 **LATE vs. ATE**: 2SLS identifies the LATE — the effect on "compliers", i.e. units whose treatment status is changed by the instrument. This may differ from the population ATE. Mention this if the user is extrapolating.
 
@@ -89,7 +89,7 @@ Always report **at least two bandwidths** — the chosen one and at least one al
 
 Plus the above, add:
 
-> Because crossing the cutoff does not deterministically assign treatment, we use a fuzzy RDD, instrumenting actual treatment status with the threshold-crossing indicator. The first-stage jump in treatment probability at the cutoff is [π] ([F-stat]). The second-stage LATE — the effect on units induced into treatment by the threshold — is [β].
+> Because crossing the cutoff does not deterministically assign treatment, we use a fuzzy RDD, instrumenting actual treatment status with the threshold-crossing indicator. The first-stage jump in treatment probability at the cutoff is [π]. The Wald LATE — the effect on units induced into treatment by the threshold — is [β] (approximate SE [se], 95% CI [low, high]). If the first-stage jump is small or imprecise, treat the fuzzy RDD estimate as suggestive.
 
 ---
 

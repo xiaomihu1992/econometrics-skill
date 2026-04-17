@@ -16,7 +16,7 @@ This is **not** for pure prediction, forecasting, time-series ARIMA, or ML model
 
 ## Runtime requirements
 
-Use Python 3.10+ with `numpy`, `pandas`, `matplotlib`, `statsmodels`, `linearmodels`, `scipy`, and `openpyxl` for `.xlsx/.xlsm` Excel files.
+Use Python 3.10+ with `numpy`, `pandas`, `matplotlib`, `statsmodels`, `linearmodels`, `scipy`, `openpyxl` for `.xlsx/.xlsm` Excel files, and `xlrd` for legacy `.xls` Excel files.
 
 ## Depth modes
 
@@ -180,7 +180,7 @@ When the user is vague ("use robust errors on a panel"), pick `"cluster_entity"`
 
 1. **PSM without checking common support** — Always run `propensity_score_visualize_propensity_score_distribution` before matching; if the overlap is poor, warn the user and suggest trimming.
 2. **DID without checking parallel trends** — For staggered DID, run the event study (`Staggered_Diff_in_Diff_Event_Study_regression`) and look at the pre-period coefficients; they should be flat near zero.
-3. **IV with a weak instrument** — Always call `IV_2SLS_IV_setting_test` and report the first-stage F-stat; the rule of thumb is F > 10.
+3. **IV with a weak instrument** — Always call `IV_2SLS_IV_setting_test` and report the covariate-adjusted partial first-stage F-stat; the rule of thumb is F > 10.
 4. **RDD with the wrong bandwidth** — The default bandwidth choice dominates results. Offer at least two bandwidths and check sensitivity.
 5. **Binary-outcome OLS** — Linear Probability Models are OK for ATE but warn about predicted probabilities outside [0, 1] and offer Logit/Probit as a sensitivity check.
 
@@ -192,9 +192,9 @@ These are issues in `lib/econometric_algorithm.py` that you cannot fix by callin
 
 The library implements 2SLS by hand with two OLS calls. The second-stage OLS computes SEs using the predicted T-hat residuals rather than the actual T residuals. Proper 2SLS SE adjustment (Wooldridge Ch. 15) is not applied. **Reported p-values and CIs will be too optimistic.** For a reliable IV analysis, recommend using `linearmodels.iv.IV2SLS` directly or the R `ivreg` package as a cross-check.
 
-### IV relevance test ignores covariates
+### IV diagnostic checks do not prove exclusion
 
-`IV_2SLS_IV_setting_test` regresses T on Z alone in the first stage, even when `covariate_variables` are passed. A proper partial F-test should include covariates. The reported first-stage F may overstate instrument strength when covariates explain much of T's variation. Advise the user to manually run `sm.OLS(T, sm.add_constant(pd.concat([Z, X], axis=1))).fit()` and check the t-stat/F on Z if precision matters.
+`IV_2SLS_IV_setting_test` now reports a first stage conditional on covariates, a reduced form, and a residual falsification check. Do **not** call the residual check an exclusion-restriction test. Exclusion is not directly testable in a just-identified IV design; it must be defended with institutional detail, predetermined-covariate balance, placebo outcomes, and sensitivity discussion.
 
 ### AIPW is not doubly robust
 
@@ -202,14 +202,7 @@ The implementation only constructs counterfactuals for the control group (predic
 
 ### IPW-RA takes sqrt of IPW weights
 
-Line 292 applies `IPW = IPW ** 0.5` before running the weighted regression. This has no standard theoretical justification in the DR literature (Bang & Robins 2005). Document as non-standard when reporting results.
-
-### Event study visualization has two bugs
-
-1. Confidence interval whiskers are offset by -1 from point estimates (off-by-one in x-coordinate calculation).
-2. The vertical "treatment onset" line is hardcoded at `x=2.5`, which is only correct when `see_back_length=4`. Other values produce a misplaced line.
-
-Both are cosmetic — the underlying regression coefficients are correct. For publication-quality plots, recommend using matplotlib directly with the coefficient/CI data from the model object rather than the built-in visualization function.
+The IPW-RA implementation applies `IPW = IPW ** 0.5` before running the weighted regression. This has no standard theoretical justification in the DR literature (Bang & Robins 2005). Document as non-standard when reporting results.
 
 ### Event study lead/lag assignment relies on DataFrame integer index
 

@@ -80,7 +80,7 @@ Required reporting:
 - First stage conditional on covariates, with coefficient on Z, partial F-statistic, and interpretation.
 - Reduced form: effect of Z on Y.
 - 2SLS/LATE estimate: effect for compliers, not the population ATE.
-- Exclusion restriction argument: why Z affects Y only through T.
+- Exclusion restriction argument: why Z affects Y only through T; do not present residual diagnostics as proof.
 - Monotonicity argument: why Z does not push some units into treatment and others out in opposite directions.
 - Balance/falsification checks: Z should not predict predetermined covariates or placebo outcomes.
 - Weak-instrument concern: if first-stage F is weak, do not trust conventional SEs.

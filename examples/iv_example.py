@@ -30,29 +30,28 @@ Y = 10 + 0.3 * T + 0.5 * ability + 0.05 * parent_educ + rng.normal(0, 0.5, n)
 
 df = pd.DataFrame({"Y": Y, "T": T, "Z": distance, "parent_educ": parent_educ})
 
-# First-stage / weak-instrument check
+# First-stage / reduced-form / falsification diagnostics
 diag = IV_2SLS_IV_setting_test(
     dependent_variable=df["Y"],
     treatment_variable=df["T"],
     IV_variable=df["Z"],
     covariate_variables=df[["parent_educ"]],
 )
-first_stage = diag["relevant_condition"]
-excl_test = diag["exclusion_restriction"]
-print("First-stage diagnostics (relevance condition):")
-print(f"  F-statistic = {first_stage.fvalue:.2f} (p = {first_stage.f_pvalue:.4f})")
+first_stage = diag["first_stage"]
+reduced_form = diag["reduced_form"]
+resid_check = diag["residual_falsification_check"]
+print("First-stage diagnostics (relevance, conditional on covariates):")
+print(f"  Partial F-statistic = {diag['first_stage_partial_f']:.2f} (p = {diag['first_stage_partial_f_pvalue']:.4f})")
 print(f"  R² = {first_stage.rsquared:.4f}")
-print(f"  --> {'Strong' if first_stage.fvalue > 10 else 'WEAK'} instrument (threshold: F > 10)")
+print(f"  --> {'Strong' if diag['first_stage_partial_f'] > 10 else 'WEAK'} instrument (threshold: F > 10)")
 print()
-print("Exclusion restriction test (residual on Z):")
-print(f"  Coeff on Z = {excl_test.params['Z']:.4f} (p = {excl_test.pvalues['Z']:.4f})")
-print(f"  --> {'Passes' if excl_test.pvalues['Z'] > 0.05 else 'FAILS'} (want: insignificant)")
+print("Reduced form (Y on Z + covariates):")
+print(f"  Coeff on Z = {reduced_form.params['Z']:.4f} (p = {reduced_form.pvalues['Z']:.4f})")
 print()
-
-# NOTE: this library's IV relevance test regresses T on Z alone, ignoring covariates.
-# For a proper partial F-test, manually run:
-#   sm.OLS(df["T"], sm.add_constant(pd.concat([df["Z"], df[["parent_educ"]]], axis=1))).fit()
-# and check the t-stat on Z.
+print("Residual falsification check (not an exclusion-restriction test):")
+print(f"  Coeff on Z = {resid_check.params['Z']:.4f} (p = {resid_check.pvalues['Z']:.4f})")
+print("  Exclusion itself must be defended from institutional details and placebo/balance checks.")
+print()
 
 # 2SLS estimate (LATE)
 m = IV_2SLS_regression(

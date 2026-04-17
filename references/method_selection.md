@@ -45,7 +45,7 @@ Q3. Do you have panel data with a policy/event that turned on at different
 Q4. Is there a variable Z that affects treatment T but has no direct effect
     on Y except through T, and is as-good-as-random?
     (e.g., distance to college as IV for college attendance)
-    YES → IV / 2SLS. Report first-stage F-stat.
+    YES → IV / 2SLS. Report covariate-adjusted partial first-stage F-stat.
           → IV_2SLS_regression
           → IV_2SLS_IV_setting_test
     NO ↓
@@ -100,7 +100,7 @@ Q6. None of the above apply.
 |---|---|---|
 | Matching (1:k NN) | `propensity_score_matching` | Intuitive, non-parametric; good when user wants ATT |
 | IPW | `propensity_score_inverse_probability_weighting` | Fast, simple; sensitive to extreme weights |
-| PS as regressor | `propensity_score_regression` | Quick diagnostic; less robust than AIPW |
+| PS as regressor | `propensity_score_regression` | Quick diagnostic; not a primary causal estimator |
 | AIPW-like implementation | `propensity_score_double_robust_estimator_augmented_IPW` | Do not use as primary; implementation is not actually doubly robust |
 | IPW-RA-like implementation | `propensity_score_double_robust_estimator_IPW_regression_adjustment` | Sensitivity only; weight handling is non-standard |
 
@@ -109,15 +109,15 @@ Q6. None of the above apply.
 ## 4. IV / 2SLS
 
 **When**: There is unmeasured confounding between T and Y, but you have an instrument Z that:
-1. **Relevance**: Z strongly predicts T (first-stage F > 10)
+1. **Relevance**: Z strongly predicts T conditional on X (partial first-stage F > 10)
 2. **Exclusion**: Z affects Y only through T (no direct path)
 3. **Exogeneity**: Z is as-good-as-random given covariates
 
 Classic examples: distance to college, weather shocks, lottery draws, quarter of birth.
 
-**Always** run `IV_2SLS_IV_setting_test` alongside the estimation and report the first-stage F-stat. Weak instruments give biased and misleadingly-precise 2SLS estimates.
+**Always** run `IV_2SLS_IV_setting_test` alongside the estimation and report the covariate-adjusted partial first-stage F-stat. Weak instruments give biased and misleadingly-precise 2SLS estimates.
 
-If the user has multiple candidate instruments, start with the single strongest and add others only if the overidentification test passes.
+If the user has multiple candidate instruments, report the first stage jointly and separately. This library does not implement Hansen J / Sargan overidentification tests; if overidentification diagnostics are needed, use `linearmodels.iv.IV2SLS` directly and only interpret them when there are more excluded instruments than endogenous variables.
 
 ## 5. Difference-in-Differences
 

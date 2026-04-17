@@ -27,7 +27,7 @@ metadata:
 
 ## 运行环境要求
 
-使用 Python 3.10+，并安装 `numpy`、`pandas`、`matplotlib`、`statsmodels`、`linearmodels`、`scipy`。如果要读取 `.xlsx/.xlsm` Excel 文件，还需要 `openpyxl`。
+使用 Python 3.10+，并安装 `numpy`、`pandas`、`matplotlib`、`statsmodels`、`linearmodels`、`scipy`。如果要读取 `.xlsx/.xlsm` Excel 文件，还需要 `openpyxl`；如果要读取旧版 `.xls` Excel 文件，还需要 `xlrd`。
 
 ## 深度模式
 
@@ -194,7 +194,7 @@ print(format_dataset_report(analysis))
 
 1. **PSM 没有检查共同支撑**：匹配前总是先运行 `propensity_score_visualize_propensity_score_distribution`；如果重叠性差，提醒用户并建议 trimming。
 2. **DID 没有检查平行趋势**：对 staggered DID，运行事件研究（`Staggered_Diff_in_Diff_Event_Study_regression`）并查看处理前系数；它们应当在 0 附近较平坦。
-3. **IV 使用弱工具变量**：总是调用 `IV_2SLS_IV_setting_test` 并报告第一阶段 F 统计量；经验规则是 F > 10。
+3. **IV 使用弱工具变量**：总是调用 `IV_2SLS_IV_setting_test` 并报告控制协变量后的 partial first-stage F 统计量；经验规则是 F > 10。
 4. **RDD 带宽选择错误**：默认带宽会主导结果。至少提供两个带宽并做敏感性检查。
 5. **二元结果变量用 OLS**：线性概率模型可用于 ATE，但要提醒预测概率可能落在 [0, 1] 之外，并可建议 Logit/Probit 作为敏感性检查。
 
@@ -206,9 +206,9 @@ print(format_dataset_report(analysis))
 
 库里的 2SLS 是用两次 OLS 手写实现的。第二阶段 OLS 使用预测得到的 T-hat 残差计算标准误，而不是实际 T 的残差；没有应用正确的 2SLS 标准误调整（Wooldridge Ch. 15）。**报告的 p 值和置信区间会过于乐观。** 如果要做可靠的 IV 分析，建议直接使用 `linearmodels.iv.IV2SLS`，或用 R 的 `ivreg` 做交叉验证。
 
-### IV relevance test 忽略协变量
+### IV 诊断不能证明排除限制
 
-即使传入了 `covariate_variables`，`IV_2SLS_IV_setting_test` 的第一阶段也只回归 T on Z。正确的 partial F-test 应该包含协变量。当协变量解释了 T 的大部分变异时，报告的第一阶段 F 可能高估工具变量强度。如果结果精度重要，建议用户手动运行 `sm.OLS(T, sm.add_constant(pd.concat([Z, X], axis=1))).fit()`，检查 Z 的 t-stat/F。
+`IV_2SLS_IV_setting_test` 现在会报告包含协变量的第一阶段、简约式，以及一个残差伪检验。不要把残差伪检验称为排除限制检验。刚好识别的 IV 设计中，排除限制无法被直接检验；必须依靠制度背景、处理前协变量平衡、安慰剂结果和敏感性讨论来支撑。
 
 ### AIPW 不是双重稳健
 
@@ -216,14 +216,7 @@ print(format_dataset_report(analysis))
 
 ### IPW-RA 对 IPW 权重取了平方根
 
-第 292 行在加权回归前执行 `IPW = IPW ** 0.5`。这在 DR 文献中没有标准理论依据（Bang & Robins 2005）。报告结果时要说明这是非标准实现。
-
-### 事件研究可视化有两个 bug
-
-1. 置信区间 whiskers 相对点估计在 x 轴上偏移了 -1（x 坐标计算 off-by-one）。
-2. “处理开始”竖线硬编码为 `x=2.5`，只有 `see_back_length=4` 时才正确；其他值会画错位置。
-
-这两个问题是图形层面的；底层回归系数是正确的。如果要做发表级图表，建议直接从模型对象中提取系数和置信区间，用 matplotlib 自己画图，而不是用内置可视化函数。
+IPW-RA 实现在加权回归前执行 `IPW = IPW ** 0.5`。这在 DR 文献中没有标准理论依据（Bang & Robins 2005）。报告结果时要说明这是非标准实现。
 
 ### 事件研究 lead/lag 赋值依赖 DataFrame 整数索引
 

@@ -55,8 +55,7 @@ print(f"  IPW          : {ate_ipw:.3f}")
 
 # Step 4: Bootstrap for standard errors (PSM and IPW return bare floats)
 # Must resample the FULL pipeline: PS estimation + matching/weighting
-print("\nBootstrapping 20 replications for quick example SEs (suppress Logit output)...")
-import io, contextlib
+print("\nBootstrapping 20 replications for quick example SEs...")
 
 B = 20
 boot_psm, boot_ipw = [], []
@@ -64,9 +63,7 @@ for b in range(B):
     idx = rng.choice(n, size=n, replace=True)
     bdf = df.iloc[idx].reset_index(drop=True)
     bX = bdf[["age", "prior_earn", "educ"]]
-    # Suppress Logit convergence output inside bootstrap loop
-    with contextlib.redirect_stdout(io.StringIO()):
-        bps = propensity_score_construction(bdf["T"], bX)
+    bps = propensity_score_construction(bdf["T"], bX)
     boot_psm.append(propensity_score_matching(bdf["Y"], bdf["T"], bps, target_type="ATE"))
     boot_ipw.append(propensity_score_inverse_probability_weighting(bdf["Y"], bdf["T"], bps, target_type="ATE"))
 

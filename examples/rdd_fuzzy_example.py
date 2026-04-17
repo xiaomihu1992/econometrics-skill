@@ -54,7 +54,7 @@ print("=" * 60)
 print("Fuzzy RDD — Two-step local linear")
 print("=" * 60)
 for bw in [8, 15, 25]:
-    ate = Fuzzy_Regression_Discontinuity_Design_regression(
+    summary = Fuzzy_Regression_Discontinuity_Design_regression(
         dependent_variable=df["housing_quality"],
         entity_treatment_dummy=df["subsidy"],
         running_variable=df["poverty_score"],
@@ -63,12 +63,18 @@ for bw in [8, 15, 25]:
         running_variable_bandwidth=float(bw),
         kernel_choice="triangle",
         cov_info="HC1",
-        target_type="estimator",  # returns float
+        target_type="summary",
     )
-    print(f"  Bandwidth ±{bw:>2d}: LATE = {ate:+.3f}")
+    weak_note = " [weak first stage]" if summary["weak_first_stage"] else ""
+    print(
+        f"  Bandwidth ±{bw:>2d}: LATE = {summary['wald_late']:+.3f} "
+        f"(approx SE = {summary['approx_delta_se']:.3f}, "
+        f"first-stage jump = {summary['first_stage_jump']:.3f}, "
+        f"N = {summary['within_bandwidth_n']}){weak_note}"
+    )
 
-# Also get the full models for detailed inspection
-models = Fuzzy_Regression_Discontinuity_Design_regression(
+# Also inspect the preferred-bandwidth summary and fitted models
+preferred = Fuzzy_Regression_Discontinuity_Design_regression(
     dependent_variable=df["housing_quality"],
     entity_treatment_dummy=df["subsidy"],
     running_variable=df["poverty_score"],
@@ -77,12 +83,15 @@ models = Fuzzy_Regression_Discontinuity_Design_regression(
     running_variable_bandwidth=15.0,
     kernel_choice="triangle",
     cov_info="HC1",
-    target_type="final_models",  # returns list: [reduced_form, first_stage]
+    target_type="summary",
 )
+models = preferred["models"]
 print(f"\n  Reduced form (Y on above_cutoff):")
-print(f"    Coeff on threshold = {models[0].params.iloc[1]:.3f}")
+print(f"    Coeff on threshold = {preferred['reduced_form_jump']:.3f}")
 print(f"  First stage (T on above_cutoff):")
-print(f"    Coeff on threshold = {models[1].params.iloc[1]:.3f}")
+print(f"    Coeff on threshold = {preferred['first_stage_jump']:.3f}")
+print(f"  Approx 95% CI for LATE: [{preferred['ci_low']:.3f}, {preferred['ci_high']:.3f}]")
+print(f"  SE note: {preferred['se_note']}")
 
 # ============================================================
 # 2) Global polynomial Fuzzy RDD (robustness check)
