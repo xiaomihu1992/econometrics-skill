@@ -1,7 +1,7 @@
 ---
 name: econometrics
 description: "Causal inference and applied econometric analysis on tabular data, from uploaded-data diagnostics and cleaning advice to treatment-effect estimation and publication-grade applied research design. Use for policy impact, ATE/ATT/LATE/ITT, OLS, propensity scores, IV/2SLS, DID/event studies, RDD, robustness checks, falsification tests, identification memos, 因果推断, 政策评估, 数据清洗建议, 稳健性检验, and 异质性分析."
-metadata: {"short-description": "Causal inference for tabular data", "version": "1.2.0", "author": "econometrics-agent"}
+metadata: {"short-description": "Causal inference for tabular data", "version": "1.3.0", "author": "econometrics-agent"}
 ---
 
 # Econometrics Skill
@@ -63,7 +63,7 @@ Data is passed as `pd.Series` / `pd.DataFrame`:
 - `treatment_variable` = `df["T"]`
 - `covariate_variables` = `df[["X1", "X2", ...]]` (DataFrame, or `None`)
 
-Return values vary by function — fitted model objects (statsmodels / linearmodels), scalar ATEs, pd.Series (propensity scores), or matplotlib Figures. Check the docstring.
+Return values vary by function — fitted model objects (statsmodels / linearmodels), scalar ATEs, pd.Series (propensity scores), dict summaries, or matplotlib Figures. Invalid `target_type` values raise `ValueError`; when unsure, check `references/method_details.md` before calling.
 
 See `references/method_details.md` for exact signatures, parameter semantics, and minimal code snippets for each of the 17 functions. Read it when you're about to invoke a method you haven't used before in this session.
 
@@ -182,7 +182,8 @@ When the user is vague ("use robust errors on a panel"), pick `"cluster_entity"`
 2. **DID without checking parallel trends** — For staggered DID, run the event study (`Staggered_Diff_in_Diff_Event_Study_regression`) and look at the pre-period coefficients; they should be flat near zero.
 3. **IV with a weak instrument** — Always call `IV_2SLS_IV_setting_test` and report the covariate-adjusted partial first-stage F-stat; the rule of thumb is F > 10.
 4. **RDD with the wrong bandwidth** — The default bandwidth choice dominates results. Offer at least two bandwidths and check sensitivity.
-5. **Binary-outcome OLS** — Linear Probability Models are OK for ATE but warn about predicted probabilities outside [0, 1] and offer Logit/Probit as a sensitivity check.
+5. **Fuzzy RDD as a bare ratio** — Use the default `target_type="summary"` so the answer includes the Wald LATE, first-stage jump, approximate SE/CI, within-bandwidth N, and weak-first-stage flag. Use `target_type="estimator"` only for legacy scalar code.
+6. **Binary-outcome OLS** — Linear Probability Models are OK for ATE but warn about predicted probabilities outside [0, 1] and offer Logit/Probit as a sensitivity check.
 
 ## Known library limitations (tell the user upfront)
 

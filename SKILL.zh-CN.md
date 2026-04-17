@@ -11,7 +11,7 @@ description: >-
   或“帮我做计量分析”。
 metadata:
   short-description: "面向表格数据的因果推断"
-  version: "1.2.0"
+  version: "1.3.0"
   author: "econometrics-agent"
 ---
 
@@ -75,7 +75,7 @@ metadata:
 - `treatment_variable` = `df["T"]`
 - `covariate_variables` = `df[["X1", "X2", ...]]`（DataFrame，或 `None`）
 
-不同函数的返回值不同，可能是拟合模型对象（statsmodels / linearmodels）、标量 ATE、pd.Series（倾向得分），或 matplotlib Figure。调用前检查 docstring。
+不同函数的返回值不同，可能是拟合模型对象（statsmodels / linearmodels）、标量 ATE、pd.Series（倾向得分）、dict summary，或 matplotlib Figure。非法 `target_type` 会抛出 `ValueError`；不确定时先查 `references/method_details.md`。
 
 每个函数的精确签名、参数含义和最小代码片段见 `references/method_details.md`。本轮对话中第一次调用某个方法前，先读对应部分。
 
@@ -196,7 +196,8 @@ print(format_dataset_report(analysis))
 2. **DID 没有检查平行趋势**：对 staggered DID，运行事件研究（`Staggered_Diff_in_Diff_Event_Study_regression`）并查看处理前系数；它们应当在 0 附近较平坦。
 3. **IV 使用弱工具变量**：总是调用 `IV_2SLS_IV_setting_test` 并报告控制协变量后的 partial first-stage F 统计量；经验规则是 F > 10。
 4. **RDD 带宽选择错误**：默认带宽会主导结果。至少提供两个带宽并做敏感性检查。
-5. **二元结果变量用 OLS**：线性概率模型可用于 ATE，但要提醒预测概率可能落在 [0, 1] 之外，并可建议 Logit/Probit 作为敏感性检查。
+5. **Fuzzy RDD 只返回裸比率**：默认使用 `target_type="summary"`，这样结果会包含 Wald LATE、第一阶段跳跃、近似 SE/CI、带宽内样本量和弱一阶段标记。只有兼容旧标量代码时才使用 `target_type="estimator"`。
+6. **二元结果变量用 OLS**：线性概率模型可用于 ATE，但要提醒预测概率可能落在 [0, 1] 之外，并可建议 Logit/Probit 作为敏感性检查。
 
 ## 已知库限制（相关时要提前告诉用户）
 
